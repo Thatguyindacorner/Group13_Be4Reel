@@ -47,7 +47,7 @@ class FirebaseAuthHelper:ObservableObject{
     }//listenToAuthState()
     
     @MainActor
-    func signupUser(firstName:String, lastName:String, emailAdd:String, passwd:String) async throws{
+    func signupUser(firstName:String, lastName:String, emailAdd:String, passwd:String) async throws -> Bool{
         
         self.showProgressView = true
         
@@ -65,19 +65,19 @@ class FirebaseAuthHelper:ObservableObject{
         
         let reference = Firestore.firestore().collection("Users").document(uid)
         
+        self.signedInUser = tempUser
+        
         do{
             
            let userData =  try await reference.getDocument(as: UserData.self)
             
-            self.signedInUser = userData
+//            self.signedInUser = userData
             
         }catch{
             
             let reference = Firestore.firestore().collection("Users").document(uid)
             
             try reference.setData(from: tempUser){ err in
-                
-                
                 
             }
             
@@ -86,13 +86,15 @@ class FirebaseAuthHelper:ObservableObject{
             self.showProgressView = false
             
         }
-        
-        
+        if(self.signedInUser == nil){
+            return false
+        }
+        return true
     }//signUpUser
     
     
     @MainActor
-    func signInUser(withEmail userEmail:String, withPassword userPass: String) async throws{
+    func signInUser(withEmail userEmail:String, withPassword userPass: String) async throws -> Bool{
         
         self.showProgressView = true
         
@@ -110,6 +112,10 @@ class FirebaseAuthHelper:ObservableObject{
         
         self.isLoggedIn = true
         
+        if(self.signedInUser == nil){
+            return false
+        }
+        return true
     }
     
     

@@ -222,24 +222,52 @@ struct LoginView: View {
         if(loginMode){
             print("✉️ perform login action")
             
-           
+            Task(priority:.high){
+                await loginUser()
+                
+                self.userEmail = ""
+                self.userPassword = ""
+                self.userFName = ""
+                self.userLName = ""
+                self.userPassword = ""
+            }
             
         }else if(loginMode == false){
             print("👍 perform sign up action")
             
-            Task(priority:.background, operation: {
+            Task(priority:.high){
+              let signUpSuccess =   await signUpUser()
                 
-                do{
-                    
-                    try await fireAuthHelper.signupUser(firstName: userFName, lastName: userLName, emailAdd: userEmail, passwd: userPassword)
-                    
+                if(signUpSuccess){
+                    self.userEmail = ""
+                    self.userPassword = ""
+                    self.userFName = ""
+                    self.userLName = ""
+                    self.userPassword = ""
                     self.selection = 1
-                    
-                }catch{
-                    print("Error in the operation")
                 }
                 
-            })
+                
+            }
+            
+//            Task(priority:.background, operation: {
+//
+//                do{
+//
+//                    try await fireAuthHelper.signupUser(firstName: userFName, lastName: userLName, emailAdd: userEmail, passwd: userPassword)
+//
+//                    self.selection = 1
+//
+//                    self.userEmail = ""
+//                    self.userPassword = ""
+//                    self.userFName = ""
+//                    self.userPassword = ""
+//
+//                }catch{
+//                    print("Error in the operation\(error.localizedDescription)")
+//                }
+//
+//            })
             
         }// else if
         
@@ -247,11 +275,49 @@ struct LoginView: View {
     }//HandleButtonAction
     
     
-    private func loginUser(){
+    private func loginUser() async{
+        
+        let loginTask = Task(priority:.high){() -> Bool in
+            do{
+               
+             let logIn = try await fireAuthHelper.signInUser(withEmail: userEmail, withPassword: userPassword)
+            
+                return logIn
+            }catch{
+                print("Error while signing in \(error.localizedDescription)")
+                return false
+            }
+            
+        }
+        
+        let loginSuccess = await loginTask.value
+        
+        if(loginSuccess){
+            self.selection = 1
+        }else{
+            print("Jeez! There was an error signing in")
+        }
         
     }//LoginUser
     
-    
+    private func signUpUser() async -> Bool{
+        
+        let signUpTask = Task(priority:.high){() -> Bool in
+            do{
+                let signIn = try await fireAuthHelper.signupUser(firstName: userFName, lastName: userLName, emailAdd: userEmail, passwd: userPassword)
+                
+                return signIn
+            }catch{
+                print("Error signing up \(error.localizedDescription)")
+                return false
+            }
+        }
+        
+        let isSignedUp = await signUpTask.value
+        
+        return isSignedUp
+        
+    }//signUpUser
     
     
     
