@@ -16,6 +16,8 @@ struct UserData: Codable, Hashable{
     
     var uid:String = ""
     
+    var profilePic:String = ""
+    
     var firstName:String = ""
     
     var lastName:String = ""
@@ -23,6 +25,13 @@ struct UserData: Codable, Hashable{
     var email:String = ""
     
     var password:String = ""
+    
+    var upload: String = ""
+    
+    var friendsList: [String] = []
+    
+    var friendRequests: [String] = []
+    
     
     
     init(uid:String, firstName:String, lastName:String, email:String, password:String){

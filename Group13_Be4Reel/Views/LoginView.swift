@@ -30,7 +30,7 @@ struct LoginView: View {
     
     @EnvironmentObject var fireAuthHelper:FirebaseAuthHelper
     
-    @State private var loginMode:Bool = false{
+    @State private var loginMode:Bool = true{
         willSet{
             print("value is \(newValue)")
         }
@@ -57,7 +57,7 @@ struct LoginView: View {
     var content:some View{
         ZStack{
             
-            NavigationLink(destination:TestMainView(), tag: 1, selection: $selection){}
+            
             
             ScrollView{
             
@@ -166,27 +166,29 @@ struct LoginView: View {
                     .padding(.horizontal)
                     
                     
-                    
-                    Button(action:{
-                        print("Button pressed LoginMode Value is :\(loginMode)")
-                        
-                        handleButtonAction()
-                        
-                    }){
-                        
-                        HStack{
-                            Spacer()
+                    NavigationLink(destination:MainView(), isActive: $validated){
+                        Button(action:{
+                            print("Button pressed LoginMode Value is :\(loginMode)")
                             
-                            Text(loginMode ? "Login" : "Sign Up")
-                                .foregroundColor(.white)
-                                .padding(.vertical, 10)
-                                .font(.system(size: 14, weight: .semibold))
-                            Spacer()
-                        }//HStack
-                        .background(.blue)
-                    }//Button
-                    .cornerRadius(10)
-                    .padding()
+                            handleButtonAction()
+                            
+                        }){
+                            
+                            HStack{
+                                Spacer()
+                                
+                                Text(loginMode ? "Login" : "Sign Up")
+                                    .foregroundColor(.white)
+                                    .padding(.vertical, 10)
+                                    .font(.system(size: 14, weight: .semibold))
+                                Spacer()
+                            }//HStack
+                            .background(.blue)
+                        }//Button
+                        .cornerRadius(10)
+                        .padding()
+                    }
+                    
                     
                     
                     
@@ -230,6 +232,9 @@ struct LoginView: View {
                 self.userFName = ""
                 self.userLName = ""
                 self.userPassword = ""
+                
+                self.fireAuthHelper.showProgressView = false
+                
             }
             
         }else if(loginMode == false){
@@ -244,6 +249,9 @@ struct LoginView: View {
                     self.userFName = ""
                     self.userLName = ""
                     self.userPassword = ""
+                    
+                    self.fireAuthHelper.showProgressView = false
+                    
                     self.selection = 1
                 }
                 
@@ -294,6 +302,8 @@ struct LoginView: View {
         
         if(loginSuccess){
             self.selection = 1
+            self.validated = true
+            self.database.loggedIn = true
         }else{
             print("Jeez! There was an error signing in")
         }
@@ -314,6 +324,9 @@ struct LoginView: View {
         }
         
         let isSignedUp = await signUpTask.value
+        
+        self.validated = true
+        self.database.loggedIn = true
         
         return isSignedUp
         

@@ -15,7 +15,8 @@ enum SheetSelection{
 
 struct MainView: View {
     
-    @Binding var loginType: Int
+    //@Binding var loginType: Int
+    //@Binding var loginMode: Bool
     
     @State var upload: Bool = false
     
@@ -33,7 +34,7 @@ struct MainView: View {
                 if !database.loggedIn{
                     Text("").onAppear{
                         print("logged out")
-                        loginType = 1
+                        //loginMode = true
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
@@ -87,7 +88,9 @@ struct MainView: View {
                         activeTab = .profile
                         showTab = true
                     }){
-                        Image(systemName: "person.fill.questionmark")
+                        Image(systemName: "person.text.rectangle")
+                        //Image(systemName: "person.crop.artframe")
+                        //Image(systemName: "person.fill.questionmark")
                     }
                 }
                 ToolbarItem(placement: .principal){
@@ -100,7 +103,8 @@ struct MainView: View {
                         activeTab = .friends
                         showTab = true
                     }){
-                        Image(systemName: "person.2.circle")
+                        Image(systemName: "person.3.fill")
+                        //Image(systemName: "person.2.circle")
                     }
                 }
             }.sheet(isPresented: $showTab) {

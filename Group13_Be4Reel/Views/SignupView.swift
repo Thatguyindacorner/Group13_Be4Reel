@@ -25,7 +25,7 @@ struct SignupView: View {
                     }){
                         Text("Back to Login").padding(10).border(.black)
                     }
-                    NavigationLink(destination: MainView(loginType: $loginType).environmentObject(database), isActive: $validated) {
+                    //NavigationLink(destination: MainView(loginType: $loginType).environmentObject(database), isActive: $validated) {
                         Button(action:{
                             //validate
                             validated = true
@@ -33,7 +33,7 @@ struct SignupView: View {
                         }){
                             Text("Sign Up").padding(10).border(.black)
                         }
-                    }
+                    //}
                 }
             }
             

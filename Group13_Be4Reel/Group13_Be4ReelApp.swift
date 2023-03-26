@@ -30,9 +30,9 @@ struct Group13_Be4ReelApp: App {
     
     @State var isActive: Bool = false
 
-    @StateObject var fireAuthHelper:FirebaseAuthHelper = FirebaseAuthHelper()
+    @StateObject var fireAuthHelper = FirebaseAuthHelper()
     
-    @StateObject var fireDBHelper:FireDBUserHelper = FireDBUserHelper.sharedFireDBHelper
+    @StateObject var fireDBHelper = FireDBUserHelper.sharedFireDBHelper
     
     var body: some Scene {
         
@@ -77,8 +77,34 @@ struct Group13_Be4ReelApp: App {
 //
 //            }.navigationBarBackButtonHidden(true)
             
-            LoginView(loginType: $loginType).environmentObject(fireDBHelper)
-                .environmentObject(fireAuthHelper)
+            
+            
+            
+//            if UserDefaults.standard.string(forKey: "KEY_USER_ID") != nil{
+//                //user has logged in before
+//                Text("Hello \(UserDefaults.standard.string(forKey: "KEY_EMAIL")!)").onAppear {
+//                    Task{
+//                        guard try await fireAuthHelper.signInUser(withEmail: UserDefaults.standard.string(forKey: "KEY_EMAIL")!, withPassword: UserDefaults.standard.string(forKey: "USER_PASSWORD")!)
+//
+//                        else{
+//                            print("error signing in")
+//                            LoginView(loginType: $loginType).environmentObject(fireDBHelper)
+//                                .environmentObject(fireAuthHelper).environmentObject(database)
+//                            return
+//                        }
+//
+//                        MainView().environmentObject(database)
+//                    }
+//
+//                }
+//
+//            }
+            //else{
+                LoginView(loginType: $loginType).environmentObject(fireDBHelper)
+                    .environmentObject(fireAuthHelper).environmentObject(database)
+            //}
+            
+            
             
         }
     }
