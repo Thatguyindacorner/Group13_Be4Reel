@@ -16,7 +16,7 @@ enum SheetSelection{
 struct MainView: View {
     
     //@Binding var loginType: Int
-    //@Binding var loginMode: Bool
+    @Binding var loginMode: Bool
     
     @State var upload: Bool = false
     
@@ -34,7 +34,7 @@ struct MainView: View {
                 if !database.loggedIn{
                     Text("").onAppear{
                         print("logged out")
-                        //loginMode = true
+                        loginMode = true
                         presentationMode.wrappedValue.dismiss()
                     }
                 }

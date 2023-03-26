@@ -67,6 +67,8 @@ class FirebaseAuthHelper:ObservableObject{
         
         self.signedInUser = tempUser
         
+        self.user = authDataResult.user
+        
         do{
             
            let userData =  try await reference.getDocument(as: UserData.self)
@@ -96,7 +98,7 @@ class FirebaseAuthHelper:ObservableObject{
     @MainActor
     func signInUser(withEmail userEmail:String, withPassword userPass: String) async throws -> Bool{
         
-        do{
+  
             self.showProgressView = true
             
             let authDataResult = try await Auth.auth().signIn(withEmail: userEmail, password: userPass)
@@ -107,20 +109,12 @@ class FirebaseAuthHelper:ObservableObject{
             
             let userData = try await reference.getDocument(as: UserData.self)
                 
+            self.user = authDataResult.user
             self.signedInUser = userData
                 
             self.showProgressView = false
             self.isLoggedIn = true
                 
-            
-        }
-        
-        catch{
-            print("error")
-        }
-        
-        
-        print("past do")
         
         if(self.signedInUser == nil){
             return false

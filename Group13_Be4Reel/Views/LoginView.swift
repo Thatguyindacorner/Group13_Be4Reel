@@ -166,7 +166,7 @@ struct LoginView: View {
                     .padding(.horizontal)
                     
                     
-                    NavigationLink(destination:MainView(), isActive: $validated){
+                    NavigationLink(destination:MainView(loginMode: $loginMode), isActive: $validated){
                         Button(action:{
                             print("Button pressed LoginMode Value is :\(loginMode)")
                             
