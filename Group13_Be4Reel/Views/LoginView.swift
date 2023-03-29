@@ -304,6 +304,7 @@ struct LoginView: View {
             self.selection = 1
             self.validated = true
             self.database.loggedIn = true
+            self.database.signedInUser = self.fireAuthHelper.signedInUser
         }else{
             print("Jeez! There was an error signing in")
         }
@@ -327,6 +328,7 @@ struct LoginView: View {
         
         self.validated = true
         self.database.loggedIn = true
+        self.database.signedInUser = self.fireAuthHelper.signedInUser
         
         return isSignedUp
         

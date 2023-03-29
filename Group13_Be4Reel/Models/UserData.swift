@@ -10,7 +10,7 @@ import Foundation
 import Foundation
 import FirebaseFirestoreSwift
 
-struct UserData: Codable, Hashable{
+class UserData: Codable{
     
    //@DocumentID var id: String? = UUID().uuidString
     
@@ -26,6 +26,9 @@ struct UserData: Codable, Hashable{
     
     var password:String = ""
     
+    
+    var searchTerms: [String] = []
+    
     var upload: String = ""
     
     var friendsList: [String] = []
@@ -35,23 +38,67 @@ struct UserData: Codable, Hashable{
     
     
     init(uid:String, firstName:String, lastName:String, email:String, password:String){
-        
+
         //self.id = id
-        
+
         self.uid = uid
-        
+
         self.firstName = firstName
-        
+
         self.lastName = lastName
-        
+
         self.email = email
-        
+
         self.password = password
         
+        createSearchTerms()
+
     }
     
-    init(){
-        
+//    init(){
+//        createSearchTerms()
+//    }
+    
+    func createSearchTerms(){
+        let fullName = String(firstName+lastName).lowercased()
+        //self.searchTerms = [fullName.lowercased()]
+        self.searchTerms = []
+        var lastTermForward = ""
+        var lastTermBackward = ""
+        var lastIndex = lastName.startIndex
+        var counter = 0
+        for char in fullName{
+            
+            
+            
+            if counter < lastName.count{
+                
+                print(lastIndex)
+                
+                if counter == 0{
+                    searchTerms.append(lastTermBackward+String(lastName[lastName.startIndex]).lowercased())
+                    lastTermBackward += String(lastName[lastName.startIndex]).lowercased()
+                }
+                else{
+                    searchTerms.append(lastTermBackward+String(lastName[lastName.index(after: lastIndex)]).lowercased())
+                    
+                    lastTermBackward += String(lastName[lastName.index(after: lastIndex)]).lowercased()
+                    lastIndex = lastName.index(after: lastIndex)
+                }
+                
+                
+            }
+            
+            counter += 1
+            
+//            if counter >= firstName.count + lastName.count{
+//                break
+//            }
+            
+            self.searchTerms.append(lastTermForward + String(char).lowercased())
+            lastTermForward += String(char).lowercased()
+        }
+        print(searchTerms)
     }
     
     

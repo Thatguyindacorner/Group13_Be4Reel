@@ -11,6 +11,7 @@ import AVKit
 enum SheetSelection{
     case profile
     case friends
+    case notifications
 }
 
 struct MainView: View {
@@ -79,6 +80,12 @@ struct MainView: View {
                     print("here")
                     presentationMode.wrappedValue.dismiss()
                 }
+                else{
+                    Task{
+                        await database.getFriendRequests()
+                    }
+                }
+                
             }
             .toolbar {
                 
@@ -97,6 +104,22 @@ struct MainView: View {
                     Text("Be 4 Reel")
                 }
                 ToolbarItem(placement: .navigationBarTrailing){
+                    //notifications tab
+                    
+                    Button(action:{
+                        activeTab = .notifications
+                        showTab = true
+                    }){
+                        if database.signedInUser!.friendRequests.isEmpty{
+                            Image(systemName: "bell")
+                        }
+                        else{
+                            Image(systemName: "bell.badge")
+                        }
+                        
+                    }
+                }
+                ToolbarItem(placement: .navigationBarTrailing){
                     //friends tab
                     
                     Button(action:{
@@ -111,6 +134,10 @@ struct MainView: View {
                 if activeTab == .profile{
                     //load profile view
                     ProfileTabView()
+                }
+                else if activeTab == .notifications{
+                    //load notifications view
+                    NotificationsTabView()
                 }
                 else{
                     //load friends view
