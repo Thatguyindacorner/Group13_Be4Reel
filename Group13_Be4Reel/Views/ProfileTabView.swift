@@ -39,7 +39,7 @@ struct ProfileTabView: View {
     
     var body: some View {
         
-        VStack{
+        VStack(spacing: 25){
             Spacer()
 //            if(fireAuthHelper.user == nil){
             if(database.user == nil){

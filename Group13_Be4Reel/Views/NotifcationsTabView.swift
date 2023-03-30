@@ -17,8 +17,7 @@ struct NotificationsTabView: View {
     @State var msgAlert: String = ""
     
     var body: some View {
-        VStack{
-            
+        VStack(spacing: 25){
             Spacer()
             
             Text("Notifications").font(.title)

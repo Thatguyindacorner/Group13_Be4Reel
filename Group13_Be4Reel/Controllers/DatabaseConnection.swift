@@ -40,6 +40,8 @@ class DatabaseConnection: ObservableObject{
     
     @Published var signedInUser:UserData?
     
+    @Published var upload: UploadData?
+    
     @Published var friendsList: [FriendData] = []
     
     @Published var friendRequests: [FriendData] = []
@@ -160,7 +162,12 @@ class DatabaseConnection: ObservableObject{
            try Auth.auth().signOut()
             self.loggedIn = false
             self.user = nil
+            
             self.signedInUser = nil
+            self.friendsList = []
+            self.friendRequests = []
+            self.friendSearchList = []
+            self.upload = nil
         }catch{
             print("Error signing out")
         }
@@ -242,11 +249,35 @@ class DatabaseConnection: ObservableObject{
                     friend.uid = friendID
                     friend.relationship = .friend
                     
+                    do{
+                        let user = try await db!.collection("Users").document(friendID).collection("upload").getDocuments()
+                        if user.isEmpty{
+                            print("collection is empty")
+                            friend.upload = nil
+                        }
+                        else{
+                            do{
+                                friend.upload = try user.documents[0].data(as: UploadData.self)
+                                print("Friend Upload: \(friend.upload)")
+                            }
+                            catch{
+                                print("could not decode")
+                                friend.upload = nil
+                            }
+                            
+                        }
+                    }
+                    catch{
+                        print("no upload collection")
+                        friend.upload = nil
+                    }
+                    
                     DispatchQueue.main.sync {
                         self.friendsList.append(friend)
                     }
                     
                 }
+                print(self.friendsList)
                 print("done converting")
             }
             catch{
@@ -308,10 +339,86 @@ class DatabaseConnection: ObservableObject{
             
         }
     
-    
-    
-    
-    //upload photo/video/status or whatever
+    func checkIfPost() async -> Bool{
+            
+            guard db != nil
+            else{
+                Swift.print("No connection to database. May be no internet connection")
+                return false
+            }
+            
+            let user = db!.collection("Users").document(signedInUser!.uid).collection("upload")
+            
+            do{
+                let docs = try await user.getDocuments().documents
+                guard !docs.isEmpty
+                else{
+                    print("collection is empty")
+                    return false
+                }
+                
+                let data = try docs[0].data(as: UploadData.self)
+                
+                print("User Upload: \(data)")
+                
+                //add a day to .time and compare if current date is still earlier
+                print("expiry date: \(data.time!.addingTimeInterval(86400))")
+                print(Date.now)
+                if data.time!.addingTimeInterval(86400) < Date.now{
+                    //delete upload from database
+                    do{
+                        try await user.document(data.id!).delete()
+                        print("outdated upload deleted")
+                        return false
+                    }
+                    
+                    catch{
+                        print("could not delete past upload")
+                    }
+                }
+                
+                DispatchQueue.main.sync{
+                    self.upload = data
+                }
+                print("got upload")
+            }
+            
+            catch{
+                print("could not get documents or decode")
+                return false
+            }
+            
+            
+            print("returning")
+            return true
+        }
+        
+        //upload photo/video/status or whatever
+        func uploadPost(upload: UploadData) async -> Bool{
+            
+            guard db != nil
+            else{
+                Swift.print("No connection to database. May be no internet connection")
+                return false
+            }
+            
+            let users = db!.collection("Users")
+            
+            //try JSONEncoder().encode(upload)
+            
+            do{
+                try users.document(signedInUser!.uid).collection("upload").document(signedInUser!.uid).setData(from: upload.self)
+                print("successfully uploaded")
+            }
+            
+                    
+            catch{
+                print("some error happened")
+                return false
+            }
+            return true
+        }
+
     
     //search for users
     func searchForUsers(withKeyPhrase: String, save: Bool) async -> Bool{

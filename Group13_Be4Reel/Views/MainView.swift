@@ -22,6 +22,7 @@ struct MainView: View {
     @Binding var loginMode: Bool
     
     @State var upload: Bool = false
+    @State var doneFetch: Bool = false
     
     @State var showTab: Bool = false
     @State var activeTab: SheetSelection = .profile
@@ -33,7 +34,7 @@ struct MainView: View {
     var body: some View {
         NavigationView{
             
-            FreshScrollView{
+            //FreshScrollView{
                 
             VStack{
                 
@@ -45,23 +46,34 @@ struct MainView: View {
                     }
                 }
                 
-                if false{
-                    //uploaded video for day
-                    //                    List{
-                    //                        ForEach(friend in database.postedFriends){
-                    //                            NavigationLink(destination: VideoLoadView(video: friend.videoURL)){
-                    //                                HStack{
-                    //                                    //profile pic
-                    //                                    VStack{
-                    //                                        Image(systemName: "brain.head.profile")
-                    //                                        Text("Name")
-                    //                                    }
-                    //                                    Text("Time Posted: HH:MM")
-                    //                                    Text("Xkm away")
-                    //                                }
-                    //                            }
-                    //                        }
-                    //                    }
+                if database.upload != nil{
+                    if database.signedInUser!.friendsList.isEmpty{
+                        Text("No friends added yet :(")
+                    }
+                    else{
+                        List{
+                            ForEach(database.friendsList, id:\.uid){ friend in
+                                if friend.upload != nil{
+                                    NavigationLink(destination: QuoteView(friend: friend)){
+                                        HStack{
+                                            //profile pic
+                                            VStack{
+                                                Image(systemName: "brain.head.profile")
+                                                Text("\(friend.firstName) \(friend.lastName)")
+                                            }
+                                            Text("Time Posted: \(friend.upload!.time!.toHM())")
+                                            //Text("Xkm away")
+                                        }
+                                    }
+                                }
+                                else{
+                                    Text("No Post from \(friend.firstName) \(friend.lastName) today")
+                                }
+                                
+                            }
+                        }
+                    }
+                    
                 }
                 
                 else{
@@ -78,7 +90,7 @@ struct MainView: View {
                                     .foregroundColor(Color.green)
                             }
                         }
-                    }
+                    }.disabled(!doneFetch)
                 }
             }.onAppear{
                 if !database.loggedIn{
@@ -87,12 +99,44 @@ struct MainView: View {
                 }
                 else{
                     Task{
+                        await database.getFriendsList()
                         await database.getFriendRequests()
+                        await database.checkIfPost()
+                        doneFetch = true
                     }
                 }
                 
             }
             .toolbar {
+                
+                ToolbarItem(placement: .bottomBar){
+                    Button(action:{
+                        print("ScrollView Scrolled up")
+        
+                        Task(priority:.background){
+        
+                            self.database.friendRequests = []
+        
+                            self.database.friendsList = []
+        
+                            let reference = Firestore.firestore().collection("Users").document(self.database.signedInUser!.uid)
+                            do{
+                                self.database.signedInUser = try await reference.getDocument(as: UserData.self)
+        
+                                await self.database.getFriendsList()
+                                await self.database.getFriendRequests()
+                                await self.database.checkIfPost()
+        
+                                print("User Updated")
+                            }catch{
+                                print("Error getting the User document, \(error.localizedDescription)")
+                            }//catch
+        
+                        }//Task
+                    }){
+                        Image(systemName: "square.and.arrow.down")
+                    }
+                }
                 
                 ToolbarItem(placement: .navigationBarLeading){
                     //profile tab
@@ -108,6 +152,7 @@ struct MainView: View {
                 ToolbarItem(placement: .principal){
                     Text("Be 4 Reel")
                 }
+                
                 ToolbarItem(placement: .navigationBarLeading){
                     //notifications tab
                     
@@ -172,36 +217,56 @@ struct MainView: View {
                     FriendsTabView()
                 }
              }//sheet
-            } action: {
-                print("ScrollView Scrolled up")
-                
-                Task(priority:.background){
-                    
-                    self.database.friendRequests = []
-                    
-                    self.database.friendsList = []
-                    
-                    let reference = Firestore.firestore().collection("Users").document(self.database.signedInUser!.uid)
-                    do{
-                        self.database.signedInUser = try await reference.getDocument(as: UserData.self)
-                        
-                        await self.database.getFriendsList()
-                        
-                        await self.database.getFriendRequests()
-                        
-                        print("User Updated")
-                    }catch{
-                        print("Error getting the User document, \(error.localizedDescription)")
-                    }//catch
-                    
-                }//Task
-                
-            }//FreshScrollView
+//            } action: {
+//                print("ScrollView Scrolled up")
+//
+//                Task(priority:.background){
+//
+//                    self.database.friendRequests = []
+//
+//                    self.database.friendsList = []
+//
+//                    let reference = Firestore.firestore().collection("Users").document(self.database.signedInUser!.uid)
+//                    do{
+//                        self.database.signedInUser = try await reference.getDocument(as: UserData.self)
+//
+//                        await self.database.getFriendsList()
+//                        await self.database.getFriendRequests()
+//                        await self.database.checkIfPost()
+//
+//                        print("User Updated")
+//                    }catch{
+//                        print("Error getting the User document, \(error.localizedDescription)")
+//                    }//catch
+//
+//                }//Task
+//
+//            }//FreshScrollView
             
         }.navigationBarBackButtonHidden(true)//NavigationView
         
         
     }//body
+}
+
+struct QuoteView: View{
+    var friend: FriendData
+    
+    var body: some View{
+        NavigationView{
+            VStack{
+                Text("\(friend.firstName) \(friend.lastName)'s")
+                Spacer()
+                
+                Text("\"\(friend.upload!.upload!.text!)\"")
+                    .font(.headline)
+                    .padding(.horizontal)
+                    
+                Text("- \(friend.upload!.upload!.author!)")
+                Spacer()
+            }
+        }.navigationTitle("Quote of the day")
+    }
 }
 
 struct VideoLoadView: View {

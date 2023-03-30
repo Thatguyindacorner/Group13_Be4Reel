@@ -29,6 +29,8 @@
 		1A2919D429D168B700F9D02B /* FriendData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2919D329D168B700F9D02B /* FriendData.swift */; };
 		1A2919D629D2584100F9D02B /* NotifcationsTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A2919D529D2584100F9D02B /* NotifcationsTabView.swift */; };
 		1ABCBA4329D4D76E00DB26E1 /* UploadData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ABCBA4229D4D76E00DB26E1 /* UploadData.swift */; };
+		1ABCBA4B29D615A400DB26E1 /* QuoteAPIConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ABCBA4A29D615A400DB26E1 /* QuoteAPIConnection.swift */; };
+		1ABCBA4D29D615F200DB26E1 /* Quote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ABCBA4C29D615F200DB26E1 /* Quote.swift */; };
 		9A09658B29D50ED8001AEBD2 /* SignOutHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A09658A29D50ED8001AEBD2 /* SignOutHelper.swift */; };
 		9A09658D29D5397F001AEBD2 /* FreshScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9A09658C29D5397F001AEBD2 /* FreshScrollView.swift */; };
 		9ACB179C29CF68170085B915 /* FireDBUserHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9ACB179B29CF68170085B915 /* FireDBUserHelper.swift */; };
@@ -58,6 +60,8 @@
 		1A2919D329D168B700F9D02B /* FriendData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendData.swift; sourceTree = "<group>"; };
 		1A2919D529D2584100F9D02B /* NotifcationsTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotifcationsTabView.swift; sourceTree = "<group>"; };
 		1ABCBA4229D4D76E00DB26E1 /* UploadData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadData.swift; sourceTree = "<group>"; };
+		1ABCBA4A29D615A400DB26E1 /* QuoteAPIConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuoteAPIConnection.swift; sourceTree = "<group>"; };
+		1ABCBA4C29D615F200DB26E1 /* Quote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Quote.swift; sourceTree = "<group>"; };
 		9A09658A29D50ED8001AEBD2 /* SignOutHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignOutHelper.swift; sourceTree = "<group>"; };
 		9A09658C29D5397F001AEBD2 /* FreshScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FreshScrollView.swift; sourceTree = "<group>"; };
 		9ACB179B29CF68170085B915 /* FireDBUserHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireDBUserHelper.swift; sourceTree = "<group>"; };
@@ -131,6 +135,7 @@
 				9ACB179F29CF7D950085B915 /* UserData.swift */,
 				1A2919D329D168B700F9D02B /* FriendData.swift */,
 				1ABCBA4229D4D76E00DB26E1 /* UploadData.swift */,
+				1ABCBA4C29D615F200DB26E1 /* Quote.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -141,6 +146,7 @@
 				1A2919C029CE8CC900F9D02B /* DatabaseConnection.swift */,
 				9ACB179B29CF68170085B915 /* FireDBUserHelper.swift */,
 				9ACB179D29CF6F7F0085B915 /* FirebaseAuthHelper.swift */,
+				1ABCBA4A29D615A400DB26E1 /* QuoteAPIConnection.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -254,6 +260,7 @@
 				9AEB2D0F29D5E9F300805C5A /* ErrorEnums.swift in Sources */,
 				1A2919B329CE60DA00F9D02B /* SignupView.swift in Sources */,
 				9A09658D29D5397F001AEBD2 /* FreshScrollView.swift in Sources */,
+				1ABCBA4D29D615F200DB26E1 /* Quote.swift in Sources */,
 				9ACB17A029CF7D950085B915 /* UserData.swift in Sources */,
 				1A2919B529CE61A700F9D02B /* MainView.swift in Sources */,
 				1A2919A229CE5CA900F9D02B /* Persistence.swift in Sources */,
@@ -264,6 +271,7 @@
 				1A29199B29CE5CA800F9D02B /* ContentView.swift in Sources */,
 				9ACB179E29CF6F7F0085B915 /* FirebaseAuthHelper.swift in Sources */,
 				1ABCBA4329D4D76E00DB26E1 /* UploadData.swift in Sources */,
+				1ABCBA4B29D615A400DB26E1 /* QuoteAPIConnection.swift in Sources */,
 				9ACB179C29CF68170085B915 /* FireDBUserHelper.swift in Sources */,
 				1A2919D029CEC14A00F9D02B /* MessageLog.swift in Sources */,
 				1A29199929CE5CA800F9D02B /* Group13_Be4ReelApp.swift in Sources */,

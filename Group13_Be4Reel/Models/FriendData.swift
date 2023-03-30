@@ -34,7 +34,7 @@ class FriendData: Identifiable{
  
     var relationship: RelationshipType = .noRelation
     
-    var upload: UploadData = UploadData()
+    var upload: UploadData?
     
     
     func setID(){

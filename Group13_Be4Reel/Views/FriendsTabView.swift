@@ -30,9 +30,9 @@ struct FriendsTabView: View {
     var body: some View {
         //Text("Friends")
         
-        VStack{
-            
-            Text("Friends List")
+        VStack(spacing: 25){
+            Spacer()
+            Text("Friends List").font(.headline)
             
             Picker(selection:$searchBy, label: Text("")){
                 
@@ -137,13 +137,14 @@ struct FriendsTabView: View {
                     Text("Search")
                 }
                 
-                if showResults{
-                    if database.friendSearchList.isEmpty{
-                        Text("No users found with this search")
-                    }
-                    else{
-                        Text("Results")
-                        List{
+                List{
+                    if showResults{
+                         
+                        if database.friendSearchList.isEmpty{
+                            Text("No Results Found")
+                        }
+                        
+                        else{
                             ForEach(database.friendSearchList.sorted(by: { f1, f2 in
                                 return f1.relationship.rawValue < f2.relationship.rawValue
                             }), id: \.uid){ result in
@@ -154,9 +155,9 @@ struct FriendsTabView: View {
                                         Button(action:{
                                             Task{
                                                 switch result.relationship{
-//                                                case .me:
-//                                                    //view profile
-//                                                    print("view")
+        //                                                case .me:
+        //                                                    //view profile
+        //                                                    print("view")
                                                 case .friend:
                                                     //remove friend
                                                     print("removing friend...")
@@ -202,9 +203,9 @@ struct FriendsTabView: View {
                                             
                                         ){
                                             switch result.relationship{
-//                                                case .me:
-//                                                    //view profile
-//                                                Text("View Profile")
+        //                                                case .me:
+        //                                                    //view profile
+        //                                                Text("View Profile")
                                                 case .friend:
                                                     //remove friend
                                                 Text("Remove Friend")
@@ -223,8 +224,16 @@ struct FriendsTabView: View {
                                 Text("\(result.id)")
                             }
                         }
-                    }
-                                               }}
+                        }
+                        
+                        
+
+                }
+
+                    
+            }
+                
+//
                 
 //                if searchText == ""{
 //                    //no search results
@@ -234,7 +243,7 @@ struct FriendsTabView: View {
 //                    //show live results based on searchText
 //                }
             }
-            
+            Spacer()
         }
         .navigationTitle(Text("Friends List"))
         .navigationBarTitleDisplayMode(.inline)
