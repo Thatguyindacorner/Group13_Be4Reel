@@ -7,6 +7,8 @@
 
 import SwiftUI
 import AVKit
+import FirebaseFirestore
+import FirebaseAuth
 
 enum SheetSelection{
     case profile
@@ -30,6 +32,9 @@ struct MainView: View {
     
     var body: some View {
         NavigationView{
+            
+            FreshScrollView{
+                
             VStack{
                 
                 if !database.loggedIn{
@@ -42,21 +47,21 @@ struct MainView: View {
                 
                 if false{
                     //uploaded video for day
-//                    List{
-//                        ForEach(friend in database.postedFriends){
-//                            NavigationLink(destination: VideoLoadView(video: friend.videoURL)){
-//                                HStack{
-//                                    //profile pic
-//                                    VStack{
-//                                        Image(systemName: "brain.head.profile")
-//                                        Text("Name")
-//                                    }
-//                                    Text("Time Posted: HH:MM")
-//                                    Text("Xkm away")
-//                                }
-//                            }
-//                        }
-//                    }
+                    //                    List{
+                    //                        ForEach(friend in database.postedFriends){
+                    //                            NavigationLink(destination: VideoLoadView(video: friend.videoURL)){
+                    //                                HStack{
+                    //                                    //profile pic
+                    //                                    VStack{
+                    //                                        Image(systemName: "brain.head.profile")
+                    //                                        Text("Name")
+                    //                                    }
+                    //                                    Text("Time Posted: HH:MM")
+                    //                                    Text("Xkm away")
+                    //                                }
+                    //                            }
+                    //                        }
+                    //                    }
                 }
                 
                 else{
@@ -103,19 +108,21 @@ struct MainView: View {
                 ToolbarItem(placement: .principal){
                     Text("Be 4 Reel")
                 }
-                ToolbarItem(placement: .navigationBarTrailing){
+                ToolbarItem(placement: .navigationBarLeading){
                     //notifications tab
                     
                     Button(action:{
                         activeTab = .notifications
                         showTab = true
                     }){
-                        if database.signedInUser!.friendRequests.isEmpty{
-                            Image(systemName: "bell")
-                        }
-                        else{
-                            Image(systemName: "bell.badge")
-                        }
+                        //if database.signedInUser!.friendRequests.isEmpty{
+                        //                        if database.signedInUser!.friendRequests.isEmpty{
+                        //                            Image(systemName: "bell")
+                        //                        }
+                        //                        else{
+                        //                            Image(systemName: "bell.badge")
+                        //                        }
+                        Image(systemName: database.signedInUser?.friendRequests.isEmpty ?? true ? "bell" : "bell.badge")
                         
                     }
                 }
@@ -130,6 +137,27 @@ struct MainView: View {
                         //Image(systemName: "person.2.circle")
                     }
                 }
+                
+                ToolbarItem(placement:.secondaryAction){
+                    //SignOutHelper()
+                    Button(action:{
+                        print("Perform Logout action")
+                        database.signOut()
+                        self.loginMode = true
+                        presentationMode.wrappedValue.dismiss()
+                        //dismiss()
+                    }){
+                        VStack{
+                            Image(systemName: "door.left.hand.open")
+                                .font(.system(size: 16))
+                                .symbolRenderingMode(.palette)
+                                .foregroundStyle(.black, .red)
+                            Text("Logout")
+                        }
+                    }//Button
+                    
+                }
+                
             }.sheet(isPresented: $showTab) {
                 if activeTab == .profile{
                     //load profile view
@@ -143,9 +171,37 @@ struct MainView: View {
                     //load friends view
                     FriendsTabView()
                 }
-            }
+             }//sheet
+            } action: {
+                print("ScrollView Scrolled up")
+                
+                Task(priority:.background){
+                    
+                    self.database.friendRequests = []
+                    
+                    self.database.friendsList = []
+                    
+                    let reference = Firestore.firestore().collection("Users").document(self.database.signedInUser!.uid)
+                    do{
+                        self.database.signedInUser = try await reference.getDocument(as: UserData.self)
+                        
+                        await self.database.getFriendsList()
+                        
+                        await self.database.getFriendRequests()
+                        
+                        print("User Updated")
+                    }catch{
+                        print("Error getting the User document, \(error.localizedDescription)")
+                    }//catch
+                    
+                }//Task
+                
+            }//FreshScrollView
+            
         }.navigationBarBackButtonHidden(true)//NavigationView
-    }
+        
+        
+    }//body
 }
 
 struct VideoLoadView: View {
@@ -174,3 +230,15 @@ struct VideoLoadView: View {
     
 }
 
+struct MainView_Previews: PreviewProvider {
+    
+    
+    static var previews: some View {
+//        LoginView(loginType: .constant(0))
+//            .environmentObject(DatabaseConnection.shared)
+        MainView(loginMode: .constant(false))
+            .environmentObject(FirebaseAuthHelper())
+            .environmentObject(FireDBUserHelper.sharedFireDBHelper)
+            .environmentObject(DatabaseConnection.shared)
+    }
+}

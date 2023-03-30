@@ -20,6 +20,10 @@ class FriendData: Identifiable{
     
     var id: String = ""
     
+    //var  = UUID()
+    
+    var uq = UUID()
+    
     var uid:String = ""
     
     var profilePic:String = ""

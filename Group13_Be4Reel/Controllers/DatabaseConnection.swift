@@ -7,12 +7,23 @@
 
 import Foundation
 import FirebaseFirestore
+import FirebaseAuth
 
 class DatabaseConnection: ObservableObject{
+    
+    @Published var showProgressView:Bool = false
     
     static var shared = DatabaseConnection()
     
     var linked: Bool = false
+    
+    @Published var user:User?{
+        
+        didSet{
+            objectWillChange.send()
+        }
+        
+    }
     
     var db: Firestore?{
         get{
@@ -38,25 +49,166 @@ class DatabaseConnection: ObservableObject{
     private init(){}
     
     
-    //functions for firebase operations
-    func loginWithCredentials(username: String, password: String) async -> Bool{
+    func listenToAuthState(){
         
-        //try to login
-        //return false if fail
+        Auth.auth().addStateDidChangeListener{ [weak self] _, user in
+            
+            guard let self = self else{
+                //No Change in Auth State
+                return
+                
+            }
+            
+            self.user = user
+            
+        }
         
-        return true
-    }
+    }//listenToAuthState()
     
-    func signUpWithCredentials(username: String, password: String) async -> Bool{
+    
+    
+    //functions for firebase operations
+    @MainActor
+    func loginWithCredentials(withEmail userEmail:String, withPassword userPass: String) async throws -> Bool{
         
-        //try to signUp
-        //return false if fail
+        self.showProgressView = true
         
-        //create user with userID attached
-        //return false if fail
+        let authDataResult = try await Auth.auth().signIn(withEmail: userEmail, password: userPass)
         
-        return true
+        let uid = authDataResult.user.uid
+        
+        let reference = Firestore.firestore().collection("Users").document(uid)
+        
+        let userData = try await reference.getDocument(as: UserData.self)
+            
+        self.user = authDataResult.user
+        self.signedInUser = userData
+        
+        await self.getFriendsList()
+        
+        await self.getFriendRequests()
+        
+        self.showProgressView = false
+        self.loggedIn = true
+            
+    
+    if(self.signedInUser == nil){
+        return false
     }
+    return true
+    }//loginWithCredentials
+    
+    
+    @MainActor
+    func signUpWithCredentials(firstName:String, lastName:String, emailAdd:String, passwd:String) async throws-> Bool{
+        
+        self.showProgressView = true
+        
+        let authDataResult = try await Auth.auth().createUser(withEmail: emailAdd, password: passwd)
+        
+        let uid = authDataResult.user.uid
+        
+        let tempUser = UserData(uid: uid, firstName: firstName, lastName: lastName, email: emailAdd, password: passwd)
+        
+        UserDefaults.standard.set(authDataResult.user.email, forKey: "KEY_EMAIL")
+        
+        UserDefaults.standard.set(uid, forKey: "KEY_USER_ID")
+        
+        UserDefaults.standard.set(passwd, forKey: "USER_PASSWORD")
+        
+        let reference = Firestore.firestore().collection("Users").document(uid)
+        
+        self.signedInUser = tempUser
+        
+        self.user = authDataResult.user
+        
+    
+        do{
+            
+           let userData =  try await reference.getDocument(as: UserData.self)
+            
+//            self.signedInUser = userData
+            
+        }catch{
+            
+            let reference = Firestore.firestore().collection("Users").document(uid)
+            
+            try reference.setData(from: tempUser){ err in
+                
+            }
+            
+            self.loggedIn = true
+            
+            self.showProgressView = false
+            
+        }
+        
+        await self.getFriendsList()
+        
+        await self.getFriendRequests()
+        
+        if(self.signedInUser == nil){
+            return false
+        }
+        return true
+    }//signUpWithCredentials
+    
+    
+    func signOut(){
+        
+        do{
+           try Auth.auth().signOut()
+            self.loggedIn = false
+            self.user = nil
+            self.signedInUser = nil
+        }catch{
+            print("Error signing out")
+        }
+        
+    }//signOut
+    
+    
+    func changePassword(newPassword:String) async{
+        
+        let user = Auth.auth().currentUser
+        
+        if(user != nil){
+            print("User is not nil")
+        }
+        
+            guard let userPassword = self.signedInUser?.password else{
+                print("User is nil")
+                return
+            }
+            
+            let credential = EmailAuthProvider.credential(withEmail: user!.email!, password: userPassword)
+            
+            user?.reauthenticate(with: credential, completion: { (authResult, error) in
+                if let error = error {
+                    
+                    print("Error while reauthenticating, \(error.localizedDescription)")
+                    return
+                }
+                user?.updatePassword(to: newPassword, completion: { (error) in
+                    if let error = error {
+                        
+                        print("Error while updating password \(error.localizedDescription)")
+                        return
+                    }
+                    
+                    self.user = user
+                    
+                    print("Password updated successfully")
+                })
+            })
+    
+    } //changePassword
+    
+    
+    
+    
+    
+    
     
     //get user info (call on refresh)
 

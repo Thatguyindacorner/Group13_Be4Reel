@@ -15,9 +15,12 @@ struct ProfileTabView: View {
     
     @Environment(\.presentationMode) private var presentationMode
     
+    @Environment(\.dismiss) var dismiss
+    
     @EnvironmentObject var fireAuthHelper:FirebaseAuthHelper
     
     @EnvironmentObject var fireDBUserHelper:FireDBUserHelper
+    
     
     @State private var fName:String = ""
     
@@ -30,11 +33,16 @@ struct ProfileTabView: View {
     @State private var changePassword:Bool = true
     
     
+    @State private var showAlert:Bool = false
+    
+    @State private var errorMessage:String = ""
+    
     var body: some View {
         
         VStack{
             Spacer()
-            if(fireAuthHelper.user == nil){
+//            if(fireAuthHelper.user == nil){
+            if(database.user == nil){
                showNoUserFound()
             }else{
                 
@@ -58,7 +66,25 @@ struct ProfileTabView: View {
         
     }//Body
     
-    private func showEditImage() -> some View{
+    
+    func validateEmptyFields() throws{
+        
+        if(self.password.isEmpty || self.fName.isEmpty || self.lName.isEmpty){
+            throw ErrorEnum.FieldsEmpty
+        }
+        
+    }//validateEmptyFields
+    
+    func validatePasssordLength() throws{
+        
+        if(self.password.count < 6){
+            throw ErrorEnum.InvalidLength
+        }
+        
+    }//validatePasswordLength
+    
+    @ViewBuilder
+    func showEditImage() -> some View{
         Image(systemName: "rectangle.and.pencil.and.ellipsis")
             .font(.system(size: 120))
             .symbolRenderingMode(.palette)
@@ -66,8 +92,9 @@ struct ProfileTabView: View {
             .padding()
     }//showEditImage()
     
+    //@ViewBuilder
     func showEditFields() -> some View{
-        Group{
+        VStack{
             
             TextField("Edit First Name", text: $fName)
                 .padding(12)
@@ -106,28 +133,109 @@ struct ProfileTabView: View {
         .padding(.horizontal)
     }//showEditFields()
     
-    
+    @ViewBuilder
     func showSaveButton() -> some View{
         
-        Button(action:{
-            print("Save Button clicked")
-        }){
+        HStack(spacing:10){
             
-            HStack{
-                Image(systemName: "mail")
+            Button(action:{
+                print("Save Button clicked")
                 
-                Text("Save")
+                do{
+                    try self.validateEmptyFields()
+                    
+                    try self.validatePasssordLength()
+                    
+                    Task(priority:.background){
+                        
+                    
+                        if(!password.isEmpty){
+                            await database.changePassword(newPassword: password)
+                            
+                            self.database.signedInUser?.password = self.password
+                        }
+                        
+                        if(!self.fName.isEmpty){
+                            self.database.signedInUser?.firstName = self.fName
+                        }
+                        
+                        if(!self.lName.isEmpty){
+                            self.database.signedInUser?.lastName = self.lName
+                        }
+                        
+                        do{
+                            try await fireDBUserHelper.updateUserProfileInfo(userToUpdate: self.database.signedInUser!)
+                            
+                            self.database.signedInUser?.createSearchTerms()
+                            
+                            dismiss()
+                            
+                        }catch{
+                            print("Error updating user data, \(error.localizedDescription)")
+                            self.errorMessage = error.localizedDescription
+                            
+                            self.showAlert = true
+                        }//catch
+                    }//Task
+                    
+                }catch(let errMsg){
+                    print("Error processing data \(errMsg.localizedDescription)")
+                    
+                    self.errorMessage = errMsg.localizedDescription
+                    
+                    self.showAlert = true
+                }
                 
+            }){
+                
+                HStack{
+                    Image(systemName: "mail")
+                    
+                    Text("Save")
+                    
+                }
+                
+            }//Button
+            .buttonStyle(.borderedProminent)
+            .font(.title)
+            .controlSize(.regular)
+            .padding()
+            
+            
+            Button(action:{
+                print("Dismiss View")
+                dismiss()
+            }){
+                Text("Cancel")
+                    .frame(minHeight: 0, maxHeight: 50)
+            }//Button
+            .padding(.horizontal)
+            .background()
+            .foregroundColor(.blue)
+            .font(.system(size: 16, weight: .bold))
+            .cornerRadius(10)
+            .overlay{
+                RoundedRectangle(cornerRadius: 10)
+                    .stroke(.blue, lineWidth: 1)
             }
             
-        }
-        .buttonStyle(.borderedProminent)
-        .font(.title)
-        .controlSize(.regular)
-        .padding()
+            
+        }//HStack
+        .frame(minWidth: 0, maxWidth: .infinity)
+        
+        .alert("Error", isPresented: self.$showAlert, actions: {
+            Button("OK", role: .cancel){
+                self.showAlert = false
+            }
+        }, message: {
+            Text(self.errorMessage)
+        })
+        
+        
     }//showSaveButton()
     
     
+    @ViewBuilder
     func showNoUserFound() -> some View{
         
         VStack{
@@ -137,6 +245,7 @@ struct ProfileTabView: View {
                 .foregroundStyle(.black, .red)
                 .padding(.bottom, 60)
                 
+            Text("No Active User Found!")
             
             Button(action:{
                 print("Go to home Screen")
@@ -155,7 +264,7 @@ struct ProfileTabView: View {
             
             Spacer()
             
-        }
+        }//VStack
         .padding(EdgeInsets(top: 60, leading: 30, bottom: 30, trailing: 30))
         
     }
@@ -169,6 +278,7 @@ struct ProfileTabView_Previews: PreviewProvider {
         NavigationStack{
             ProfileTabView().environmentObject(FirebaseAuthHelper())
                 .environmentObject(FireDBUserHelper.sharedFireDBHelper)
+                .environmentObject(DatabaseConnection.shared)
         }
     }
 }

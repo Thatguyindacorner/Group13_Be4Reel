@@ -42,6 +42,11 @@ struct LoginView: View {
     @State private var selection:Int? = nil
     
     
+    @State private var errorMessage:String = ""
+    
+    @State private var showAlert:Bool = false
+    
+    
     var body: some View {
         
         NavigationView{
@@ -52,6 +57,51 @@ struct LoginView: View {
         
         
     }//body
+    
+    
+    func validateEmptyFields() throws{
+        
+        if(self.userEmail.isEmpty || self.userPassword.isEmpty){
+            throw ErrorEnum.FieldsEmpty
+        }
+        
+    }//validateEmptyFields
+    
+    func validateFNameLastNameEmptyFields() throws{
+        
+        if(self.userFName.isEmpty || self.userLName.isEmpty){
+            throw ErrorEnum.FieldsEmpty
+        }
+    }
+    
+    func validatePasssordLength() throws{
+        
+        if(self.userPassword.count < 6){
+            throw ErrorEnum.InvalidLength
+        }
+        
+    }//validatePasswordLength
+    
+    func validateIsEmailPatternCorrect(for emailAddress:String) throws{
+        
+        if(self.textFieldValidatorEmail(for: emailAddress)){
+         print("Email is valid")
+        }else{
+            throw ErrorEnum.InvalidEmailPattern
+        }
+    }//validateIsEmailPatternCorrect
+    
+    
+    func textFieldValidatorEmail(for emailAdd: String) -> Bool {
+        if emailAdd.count > 100 {
+            return false
+        }
+        let emailRegex = "(?:[\\p{L}0-9!#$%\\&'*+/=?\\^_`{|}~-]+(?:\\.[\\p{L}0-9!#$%\\&'*+/=?\\^_`{|}" + "~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\" + "x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[\\p{L}0-9](?:[a-" + "z0-9-]*[\\p{L}0-9])?\\.)+[\\p{L}0-9](?:[\\p{L}0-9-]*[\\p{L}0-9])?|\\[(?:(?:25[0-5" + "]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-" + "9][0-9]?|[\\p{L}0-9-]*[\\p{L}0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21" + "-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])"
+    
+        let emailPredicate = NSPredicate(format:"SELF MATCHES %@", emailRegex)
+        
+        return emailPredicate.evaluate(with: emailAdd)
+    }//textFieldValidatorEmail
     
     
     var content:some View{
@@ -82,7 +132,21 @@ struct LoginView: View {
                     Group{
                         
                         if(loginMode){
-                            TextField("Enter Email", text: $userEmail)
+                            TextField("Enter Email", text: $userEmail, onEditingChanged: { changedValue in
+                                
+                                if(!changedValue){
+                                    do{
+                                        try self.validateIsEmailPatternCorrect(for: self.userEmail)
+                                    }catch(let errMsg){
+                                        print("Error processing Email \(errMsg.localizedDescription)")
+                                        self.errorMessage = errMsg.localizedDescription
+                                        
+                                        self.showAlert = true
+                                        
+                                    }//catch
+                                }//if(!changedValue)
+                                
+                            })
                                 .textFieldStyle(.roundedBorder)
                                 .keyboardType(.emailAddress)
                                 .autocorrectionDisabled(true)
@@ -127,7 +191,21 @@ struct LoginView: View {
                             HStack{
                                 Image(systemName: "envelope")
                                     .foregroundColor(.gray.opacity(0.5))
-                                TextField("Enter Email*", text: $userEmail)
+                                TextField("Enter Email*", text: $userEmail, onEditingChanged: { changedValue in
+                                    
+                                    if(!changedValue){
+                                        do{
+                                            try self.validateIsEmailPatternCorrect(for: self.userEmail)
+                                        }catch(let errMsg){
+                                            print("Error processing Email \(errMsg.localizedDescription)")
+                                            self.errorMessage = errMsg.localizedDescription
+                                            
+                                            self.showAlert = true
+                                            
+                                        }//catch
+                                    }//if(!changedValue)
+                                    
+                                })
                                     //.textFieldStyle(.roundedBorder)
                                     .keyboardType(.emailAddress)
                                     .autocorrectionDisabled(true)
@@ -170,8 +248,23 @@ struct LoginView: View {
                         Button(action:{
                             print("Button pressed LoginMode Value is :\(loginMode)")
                             
-                            handleButtonAction()
-                            
+                            do{
+                                
+                                try self.validateEmptyFields()
+                                
+                                try self.validatePasssordLength()
+                                
+                                //If all is well, perform Button actions
+                                handleButtonAction()
+                                
+                            }catch(let errMsg){
+                                print("Error while processing user information.\(errMsg.localizedDescription)")
+                                
+                                self.errorMessage = errMsg.localizedDescription
+                                
+                                self.showAlert = true
+                                
+                            }//catch
                         }){
                             
                             HStack{
@@ -187,35 +280,45 @@ struct LoginView: View {
                         }//Button
                         .cornerRadius(10)
                         .padding()
-                    }
+                        
+                        .alert("Error", isPresented: self.$showAlert, actions: {
+                            Button("OK", role: .cancel){
+                                self.showAlert = false
+                            }
+                        }, message: {
+                            Text(self.errorMessage)
+                        })
+                    }//NavigationLink
                     
                     
                     
                     
                     
                 }//VStack
-                .onAppear{
-                    Auth.auth().addStateDidChangeListener{(auth, user) in
-
-                        if user != nil{
-                            fireAuthHelper.isLoggedIn = true
-
-                        }
-
-                    }
-                }
+                
                 
             }//ScrollView
             .navigationTitle(loginMode ? "Login" : "Create Account")
             .background(Color(.init(white:0, alpha:0.05)))
             
-            if(fireAuthHelper.showProgressView){
+            //if(fireAuthHelper.showProgressView){
+            if(database.showProgressView){
                 ProgressView()
                     .tint(.red)
                     .scaleEffect(4)
             }
             
         } //ZStack
+        .onAppear{
+            Auth.auth().addStateDidChangeListener{(auth, user) in
+
+                if user != nil{
+                    //fireAuthHelper.isLoggedIn = true
+                    database.loggedIn = true
+                }
+
+            }
+        }//onAppear
         
     }
     
@@ -233,29 +336,41 @@ struct LoginView: View {
                 self.userLName = ""
                 self.userPassword = ""
                 
-                self.fireAuthHelper.showProgressView = false
-                
+                //self.fireAuthHelper.showProgressView = false
+                self.database.showProgressView = false
             }
             
         }else if(loginMode == false){
             print("👍 perform sign up action")
             
-            Task(priority:.high){
-              let signUpSuccess =   await signUpUser()
+            do{
+            
+                try self.validateFNameLastNameEmptyFields()
                 
-                if(signUpSuccess){
-                    self.userEmail = ""
-                    self.userPassword = ""
-                    self.userFName = ""
-                    self.userLName = ""
-                    self.userPassword = ""
+                Task(priority:.high){
+                  let signUpSuccess =   await signUpUser()
                     
-                    self.fireAuthHelper.showProgressView = false
+                    if(signUpSuccess){
+                        self.userEmail = ""
+                        self.userPassword = ""
+                        self.userFName = ""
+                        self.userLName = ""
+                        self.userPassword = ""
+                        
+                        //self.fireAuthHelper.showProgressView = false
+                        self.database.showProgressView = false
+                        
+                        self.selection = 1
+                    }//if signUpSuccess
                     
-                    self.selection = 1
-                }
+                    
+                }//Task
                 
+            }catch(let errMsg){
+                print("Error while processing user information \(errMsg.localizedDescription)")
+                self.errorMessage = errMsg.localizedDescription
                 
+                self.showAlert = true
             }
             
 //            Task(priority:.background, operation: {
@@ -288,11 +403,14 @@ struct LoginView: View {
         let loginTask = Task(priority:.high){() -> Bool in
             do{
                
-             let logIn = try await fireAuthHelper.signInUser(withEmail: userEmail, withPassword: userPassword)
+//             let logIn = try await fireAuthHelper.signInUser(withEmail: userEmail, withPassword: userPassword)
             
+                let logIn = try await database.loginWithCredentials(withEmail: userEmail, withPassword: userPassword)
+                
                 return logIn
             }catch{
                 print("Error while signing in \(error.localizedDescription)")
+                self.errorMessage = error.localizedDescription
                 return false
             }
             
@@ -304,9 +422,10 @@ struct LoginView: View {
             self.selection = 1
             self.validated = true
             self.database.loggedIn = true
-            self.database.signedInUser = self.fireAuthHelper.signedInUser
+           // self.database.signedInUser = self.fireAuthHelper.signedInUser
         }else{
             print("Jeez! There was an error signing in")
+            self.showAlert = true
         }
         
     }//LoginUser
@@ -315,7 +434,9 @@ struct LoginView: View {
         
         let signUpTask = Task(priority:.high){() -> Bool in
             do{
-                let signIn = try await fireAuthHelper.signupUser(firstName: userFName, lastName: userLName, emailAdd: userEmail, passwd: userPassword)
+//                let signIn = try await fireAuthHelper.signupUser(firstName: userFName, lastName: userLName, emailAdd: userEmail, passwd: userPassword)
+                
+                let signIn = try await database.signUpWithCredentials(firstName: userFName, lastName: userLName, emailAdd: userEmail, passwd: userPassword)
                 
                 return signIn
             }catch{
@@ -328,7 +449,7 @@ struct LoginView: View {
         
         self.validated = true
         self.database.loggedIn = true
-        self.database.signedInUser = self.fireAuthHelper.signedInUser
+        //self.database.signedInUser = self.fireAuthHelper.signedInUser
         
         return isSignedUp
         

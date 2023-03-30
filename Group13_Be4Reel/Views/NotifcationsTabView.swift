@@ -31,8 +31,8 @@ struct NotificationsTabView: View {
             else{
                 //maybe do messages too
                 List{
-                    ForEach(database.friendRequests, id: \.uid){ request in
-
+//                    ForEach(database.friendRequests, id: \.uq){ request in
+                    ForEach(database.friendRequests, id: \.uq){ request in
                         Button(action:{
                             titleAlert = "Friend request from \(request.firstName) \(request.lastName)"
                             msgAlert = "What would you like to do?"
@@ -80,6 +80,12 @@ struct NotificationsTabView: View {
                 
             Spacer()
         }
+//        .onAppear{
+//
+//            Task{
+//                await self.database.getFriendRequests()
+//            }//Task
+//        }//onAppear
     }
 }
 

@@ -26,6 +26,7 @@ class FireDBUserHelper:ObservableObject{
 
     func insertUser(newUserData:UserData) async throws{
         
+        
         try store.collection(COLLECTION_USERS).document(newUserData.uid).setData(from: newUserData){ err in
             
             if let err = err{
@@ -37,7 +38,42 @@ class FireDBUserHelper:ObservableObject{
                 print("😎 Users collection created for DOC ID: \(newUserData.uid)")
             }
         }
+    }//insertNewUser
+    
+    
+    func updateUserProfileInfo(userToUpdate:UserData) async throws{
+        
+//       try await store.collection("Users")
+//            .document(userToUpdate.uid)
+//            .setData(["firstName" : userToUpdate.firstName,
+//                      "lastName": userToUpdate.lastName,
+//                      "password": userToUpdate.password])
+         
+      try await store.collection("Users").document(userToUpdate.uid)
+            .updateData(["firstName" : userToUpdate.firstName,
+                        "lastName": userToUpdate.lastName,
+                        "password": userToUpdate.password])
+        
+
+    }//updateUserProfileInfo()
+    
+    
+    func getUserData(userData:UserData) async -> UserData?{
+        
+        do{
+            let userData =   try await self.store.collection("Users")
+                .document(userData.uid)
+                .getDocument()
+                .data(as: UserData.self)
+            
+            return userData
+        }catch {
+           print("Error retrieving doc data")
+            return nil
+        }
+       
     }
+    
     
     
     
